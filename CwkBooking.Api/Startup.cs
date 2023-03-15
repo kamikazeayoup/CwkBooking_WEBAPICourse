@@ -1,3 +1,5 @@
+using CwkBooking.Api.Controllers;
+using CwkBooking.Api.Controllers.Services;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.HttpsPolicy;
@@ -33,6 +35,9 @@ namespace CwkBooking.Api
                 c.SwaggerDoc("v1", new OpenApiInfo { Title = "CwkBooking.Api", Version = "v1" });
             });
             services.AddSingleton<DataSource>();
+            services.AddSingleton<ISingletonOperation , SingletonOperation>();
+            services.AddTransient<ITransientOperation , TransientOperation>();
+            services.AddScoped<IScoopedOperation , ScoopedOperation>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
