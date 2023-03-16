@@ -1,5 +1,5 @@
 using CwkBooking.Api.Controllers;
-using CwkBooking.Api.Controllers.Services;
+using CwkBooking.Api.Middleware;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.HttpsPolicy;
@@ -35,9 +35,8 @@ namespace CwkBooking.Api
                 c.SwaggerDoc("v1", new OpenApiInfo { Title = "CwkBooking.Api", Version = "v1" });
             });
             services.AddSingleton<DataSource>();
-            services.AddSingleton<ISingletonOperation , SingletonOperation>();
-            services.AddTransient<ITransientOperation , TransientOperation>();
-            services.AddScoped<IScoopedOperation , ScoopedOperation>();
+            services.AddHttpContextAccessor();
+          
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -55,6 +54,14 @@ namespace CwkBooking.Api
             app.UseRouting();
 
             app.UseAuthorization();
+
+            /* app.Use(async (context, next) =>
+             {
+                 context.Request.Headers.Add("my-middleware-header", DateTime.Now.ToString());
+                 //notice -- if i forget to add the await next in the pipeline, the pipeline will break
+                 await next();
+             });*/
+            app.UseDateTimeHeader();
 
             app.UseEndpoints(endpoints =>
             {

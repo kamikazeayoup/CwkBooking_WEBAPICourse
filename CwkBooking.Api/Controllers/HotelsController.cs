@@ -1,5 +1,5 @@
-﻿using CwkBooking.Api.Controllers.Services;
-using CwkBooking.Domain.Models;
+﻿using CwkBooking.Domain.Models;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using System;
@@ -15,28 +15,21 @@ namespace CwkBooking.Api.Controllers
     public class HotelsController : Controller
     {
         public readonly DataSource _DataSource;
-        private readonly ISingletonOperation _singleton;
-        private readonly IScoopedOperation _scooped;
-        private readonly ITransientOperation _transient;
         private readonly ILogger<HotelsController> _logger;
+        private readonly HttpContext _http;
 
-        public HotelsController(DataSource dataSource, ISingletonOperation singleton , IScoopedOperation scooped, ITransientOperation transient, ILogger<HotelsController> logger)
+        public HotelsController(DataSource dataSource, ILogger<HotelsController> logger , IHttpContextAccessor httpContextAccessor)
         {
             _DataSource = dataSource;
-            _scooped = scooped;
-            _transient = transient;
-            _singleton = singleton;
             _logger = logger;
+            _http = httpContextAccessor.HttpContext;
         }
         [HttpGet]
         public IActionResult GetAllHotels()
         {
-            _logger.LogInformation($"GUID of Singleton : {_singleton.Guid}");
-            _logger.LogInformation($"GUID of Scooped : {_scooped.Guid}");
-            _logger.LogInformation($"GUID of Transient : {_transient.Guid}");
-            
-            var hotels = _DataSource.Hotels;
-            return Ok(hotels);
+            HttpContext.Request.Headers.TryGetValue("my-middleware-header", out var headerDate);
+            //var hotels = _DataSource.Hotels;
+            return Ok(headerDate);
         }
         [Route("{id}")]
         [HttpGet]
