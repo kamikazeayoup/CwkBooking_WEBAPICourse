@@ -1,18 +1,18 @@
 using CwkBooking.Api.Controllers;
 using CwkBooking.Api.Middleware;
+using CwkBooking.Dal;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.HttpsPolicy;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.OpenApi.Models;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+
 
 namespace CwkBooking.Api
 {
@@ -34,8 +34,11 @@ namespace CwkBooking.Api
             {
                 c.SwaggerDoc("v1", new OpenApiInfo { Title = "CwkBooking.Api", Version = "v1" });
             });
-            services.AddSingleton<DataSource>();
             services.AddHttpContextAccessor();
+
+            var cs = Configuration.GetConnectionString("Default");
+            services.AddDbContext<DataContext>(options => options.UseSqlServer(cs));
+      
           
         }
 
@@ -55,13 +58,8 @@ namespace CwkBooking.Api
 
             app.UseAuthorization();
 
-            /* app.Use(async (context, next) =>
-             {
-                 context.Request.Headers.Add("my-middleware-header", DateTime.Now.ToString());
-                 //notice -- if i forget to add the await next in the pipeline, the pipeline will break
-                 await next();
-             });*/
-            app.UseDateTimeHeader();
+            //app.UseDateTimeHeader();
+
 
             app.UseEndpoints(endpoints =>
             {

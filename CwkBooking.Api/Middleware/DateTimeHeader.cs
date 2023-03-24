@@ -19,7 +19,7 @@ namespace CwkBooking.Api.Middleware
         {
             //excuted on the request
             httpContext.Request.Headers.Add("my-middleware-header", DateTime.Now.ToString());
-            await Task.FromResult(_next(httpContext));
+            await _next(httpContext);
             //excuted on the response
         }
     }

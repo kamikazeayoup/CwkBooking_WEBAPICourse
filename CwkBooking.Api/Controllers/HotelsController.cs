@@ -1,10 +1,9 @@
-﻿using CwkBooking.Domain.Models;
+﻿using CwkBooking.Dal;
+using CwkBooking.Domain.Models;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 
 
@@ -14,68 +13,62 @@ namespace CwkBooking.Api.Controllers
     [Route("api/[Controller]")]
     public class HotelsController : Controller
     {
-        public readonly DataSource _DataSource;
         private readonly ILogger<HotelsController> _logger;
         private readonly HttpContext _http;
-
-        public HotelsController(DataSource dataSource, ILogger<HotelsController> logger , IHttpContextAccessor httpContextAccessor)
+        private readonly DataContext _ctx;
+        public HotelsController(ILogger<HotelsController> logger, IHttpContextAccessor httpContextAccessor,
+            DataContext ctx)
         {
-            _DataSource = dataSource;
             _logger = logger;
             _http = httpContextAccessor.HttpContext;
+            _ctx = ctx;
         }
         [HttpGet]
-        public IActionResult GetAllHotels()
+        public async Task <IActionResult> GetAllHotels()
         {
-            HttpContext.Request.Headers.TryGetValue("my-middleware-header", out var headerDate);
-            //var hotels = _DataSource.Hotels;
-            return Ok(headerDate);
+            var hotels = await _ctx.Hotels.ToListAsync();
+            return Ok(hotels);
         }
         [Route("{id}")]
         [HttpGet]
-        public IActionResult GetHotelsById(int id) {
-            var hotels = _DataSource.Hotels;
-            var hotel = hotels.FirstOrDefault(h=> h.HotelId== id);
-            if (hotel == null)
-                return NotFound();
+        public async Task<IActionResult> GetHotelsById(int id) {
+            var hotel = await _ctx.Hotels.FirstOrDefaultAsync(h=> h.HotelId== id);
             return Ok(hotel);
 
         }
 
 
         [HttpPost]
-        public IActionResult CreateHotel([FromBody] Hotel hotel)
+        public async Task <IActionResult> CreateHotel([FromBody] Hotel hotel)
         {
-            var hotels = _DataSource.Hotels;
-            hotels.Add(hotel);
+            _ctx.Hotels.Add(hotel);
+             await _ctx.SaveChangesAsync();
             return CreatedAtAction(nameof(GetHotelsById), new { id = hotel.HotelId }, hotel);
         }
 
         [Route("{id}")]
         [HttpPut]
 
-        public IActionResult UpdateHotel([FromBody] Hotel Updated , int id)
+        public async Task<IActionResult> UpdateHotel([FromBody] Hotel Updated , int id)
         {
-            var hotels = _DataSource.Hotels;
-            var old = hotels.FirstOrDefault(h => h.HotelId == id);
-            if (old == null)
-                return NotFound("cannot EDIT , out of boundries id or not found");
-            hotels.Remove(old);
-            hotels.Add(Updated);
+            var hotel = await _ctx.Hotels.FirstOrDefaultAsync(h=> h.HotelId == id);
+            hotel.Stars = Updated.Stars;
+            hotel.Description= Updated.Description;
+            hotel.Name= Updated.Name;
+            _ctx.Hotels.Update(hotel);
+            await _ctx.SaveChangesAsync();
+
             return NoContent();
         }
 
         [Route("{id}")]
         [HttpDelete]
 
-        public IActionResult DeleteHotel(int id)
+        public async Task<IActionResult> DeleteHotel(int id)
         {
-            var hotels = _DataSource.Hotels;
-            var ToDelete = hotels.FirstOrDefault(h => h.HotelId == id);
-            if (ToDelete == null) 
-                return NotFound("cannot Delete , out of boundries id or not found");
-
-            hotels.Remove(ToDelete);
+            var hotel = await _ctx.Hotels.FirstOrDefaultAsync(h=>h.HotelId == id);
+            _ctx.Hotels.Remove(hotel);
+            await _ctx.SaveChangesAsync();
             return NoContent();
         }
 
